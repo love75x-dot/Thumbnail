@@ -124,9 +124,9 @@ export default function Home() {
         <div className="gradient-orb orb-3"></div>
       </div>
 
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16 relative z-10">
+      <div className="w-full max-w-5xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 py-10 md:py-16 lg:py-20 relative z-10">
         {/* Header */}
-        <header className="text-center mb-12 animate-fadeInDown">
+        <header className="text-center mb-16 animate-fadeInDown">
           <div className="flex items-center justify-center gap-4 mb-4">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="24" height="24" rx="6" fill="url(#gradient)" />
@@ -145,8 +145,8 @@ export default function Home() {
 
         {/* Input Section */}
         <main>
-          <div className="glass-card p-6 md:p-8 mb-8 animate-fadeInUp">
-            <div className="input-wrapper flex flex-col md:flex-row items-center gap-4 bg-black/30 rounded-3xl p-2 md:p-2 md:pl-5 border border-white/10 transition-all">
+          <div className="glass-card p-8 md:p-10 mb-10 animate-fadeInUp">
+            <div className="input-wrapper flex flex-col md:flex-row items-center gap-4 bg-black/30 rounded-3xl p-3 md:p-3 md:pl-6 border border-white/10 transition-all">
               <svg className="hidden md:block text-white/50 flex-shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.1 1.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -164,7 +164,7 @@ export default function Home() {
               <button
                 onClick={extractThumbnails}
                 disabled={isLoading}
-                className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-3xl text-white font-semibold whitespace-nowrap w-full md:w-auto justify-center"
+                className="btn-primary flex items-center gap-2 px-6 py-3.5 rounded-3xl text-white font-semibold whitespace-nowrap w-full md:w-auto justify-center"
               >
                 {isLoading ? (
                   <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -173,8 +173,8 @@ export default function Home() {
                   </svg>
                 ) : (
                   <>
-                    <span>썸네일 추출</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <span>추출</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </>
