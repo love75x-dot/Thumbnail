@@ -9,24 +9,27 @@ interface ThumbnailRemakeProps {
 
 interface StyleAnalysis {
     textColor: string;
-    textPosition: string;
-    fontStyle: string;
-    fontSize: string;
-    backgroundStyle: string;
+    strokeColor: string | null;
+    fontSizeRatio: number;
+    fontWeight: string;
+    verticalPosition: string;
+    horizontalAlign: string;
 }
 
 const defaultStyle: StyleAnalysis = {
     textColor: '#FFFFFF',
-    textPosition: 'bottom-center',
-    fontStyle: 'bold',
-    fontSize: 'large',
-    backgroundStyle: 'blur',
+    strokeColor: '#000000',
+    fontSizeRatio: 0.12,
+    fontWeight: 'bold',
+    verticalPosition: 'bottom',
+    horizontalAlign: 'center',
 };
 
 export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRemakeProps) {
     const [userImage, setUserImage] = useState<string | null>(null);
     const [userText, setUserText] = useState('나만의 썸네일 제목');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [styleAnalysis, setStyleAnalysis] = useState<StyleAnalysis>(defaultStyle);
     const [isDragOver, setIsDragOver] = useState(false);
@@ -37,6 +40,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
     // Analyze thumbnail style when component mounts or thumbnailUrl changes
     useEffect(() => {
         const analyzeStyle = async () => {
+            setIsAnalyzing(true);
             try {
                 const response = await fetch('/api/analyze-thumbnail', {
                     method: 'POST',
@@ -47,15 +51,17 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 if (data.success) {
                     setStyleAnalysis({
                         textColor: data.textColor || defaultStyle.textColor,
-                        textPosition: data.textPosition || defaultStyle.textPosition,
-                        fontStyle: data.fontStyle || defaultStyle.fontStyle,
-                        fontSize: data.fontSize || defaultStyle.fontSize,
-                        backgroundStyle: data.backgroundStyle || defaultStyle.backgroundStyle,
+                        strokeColor: data.strokeColor,
+                        fontSizeRatio: data.fontSizeRatio || defaultStyle.fontSizeRatio,
+                        fontWeight: data.fontWeight || defaultStyle.fontWeight,
+                        verticalPosition: data.verticalPosition || defaultStyle.verticalPosition,
+                        horizontalAlign: data.horizontalAlign || defaultStyle.horizontalAlign,
                     });
                 }
             } catch (error) {
                 console.error('Style analysis failed:', error);
             }
+            setIsAnalyzing(false);
         };
 
         analyzeStyle();
@@ -96,28 +102,32 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         setIsDragOver(false);
     }, []);
 
-    const getTextPosition = (position: string, canvasWidth: number, canvasHeight: number, textWidth: number) => {
-        const padding = 40;
-        const positions: Record<string, { x: number; y: number }> = {
-            'top-left': { x: padding, y: 80 },
-            'top-center': { x: canvasWidth / 2 - textWidth / 2, y: 80 },
-            'top-right': { x: canvasWidth - textWidth - padding, y: 80 },
-            'center': { x: canvasWidth / 2 - textWidth / 2, y: canvasHeight / 2 },
-            'bottom-left': { x: padding, y: canvasHeight - 60 },
-            'bottom-center': { x: canvasWidth / 2 - textWidth / 2, y: canvasHeight - 60 },
-            'bottom-right': { x: canvasWidth - textWidth - padding, y: canvasHeight - 60 },
-        };
-        return positions[position] || positions['bottom-center'];
+    // Calculate text Y position based on verticalPosition
+    const getTextYPosition = (position: string, canvasHeight: number, fontSize: number) => {
+        const padding = 60;
+        switch (position) {
+            case 'top':
+                return padding + fontSize / 2;
+            case 'middle':
+                return canvasHeight / 2;
+            case 'bottom':
+            default:
+                return canvasHeight - padding - fontSize / 2;
+        }
     };
 
-    const getFontSize = (size: string) => {
-        const sizes: Record<string, number> = {
-            'small': 36,
-            'medium': 48,
-            'large': 64,
-            'xlarge': 80,
-        };
-        return sizes[size] || 64;
+    // Calculate text X position based on horizontalAlign
+    const getTextXPosition = (align: string, canvasWidth: number, textWidth: number) => {
+        const padding = 60;
+        switch (align) {
+            case 'left':
+                return padding;
+            case 'right':
+                return canvasWidth - textWidth - padding;
+            case 'center':
+            default:
+                return (canvasWidth - textWidth) / 2;
+        }
     };
 
     const generateThumbnail = async () => {
@@ -146,14 +156,15 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             });
 
             // Draw background with blur effect
-            ctx.filter = 'blur(20px) brightness(0.5)';
-            ctx.drawImage(bgImage, -40, -40, width + 80, height + 80);
+            ctx.filter = 'blur(25px) brightness(0.4) saturate(1.2)';
+            ctx.drawImage(bgImage, -50, -50, width + 100, height + 100);
             ctx.filter = 'none';
 
-            // Add gradient overlay
+            // Add gradient overlay for depth
             const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+            gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
 
@@ -167,13 +178,13 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 });
 
                 // Calculate dimensions to fit user image
-                const maxHeight = height * 0.85;
+                const maxHeight = height * 0.9;
                 const aspectRatio = userImg.width / userImg.height;
                 let imgHeight = maxHeight;
                 let imgWidth = imgHeight * aspectRatio;
 
-                if (imgWidth > width * 0.6) {
-                    imgWidth = width * 0.6;
+                if (imgWidth > width * 0.7) {
+                    imgWidth = width * 0.7;
                     imgHeight = imgWidth / aspectRatio;
                 }
 
@@ -181,10 +192,10 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 const imgY = height - imgHeight;
 
                 // Add shadow to user image
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                ctx.shadowBlur = 30;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                ctx.shadowBlur = 40;
                 ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 10;
+                ctx.shadowOffsetY = 15;
 
                 ctx.drawImage(userImg, imgX, imgY, imgWidth, imgHeight);
 
@@ -193,27 +204,44 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             }
 
             // Step 3: Draw text with analyzed style
-            const fontSize = getFontSize(styleAnalysis.fontSize);
-            const fontWeight = styleAnalysis.fontStyle === 'bold' ? 'bold' :
-                styleAnalysis.fontStyle === 'thin' ? '300' : 'normal';
-            const fontStyle = styleAnalysis.fontStyle === 'italic' ? 'italic' : 'normal';
+            // Calculate dynamic font size based on fontSizeRatio
+            const fontSize = Math.round(height * styleAnalysis.fontSizeRatio);
+            const fontWeight = styleAnalysis.fontWeight === 'bold' ? 'bold' :
+                styleAnalysis.fontWeight === 'normal' ? 'normal' :
+                    styleAnalysis.fontWeight; // Use the weight directly (e.g., '800')
 
-            ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px 'Noto Sans KR', sans-serif`;
+            ctx.font = `${fontWeight} ${fontSize}px 'Noto Sans KR', sans-serif`;
             ctx.textBaseline = 'middle';
 
             const textMetrics = ctx.measureText(userText);
             const textWidth = textMetrics.width;
-            const position = getTextPosition(styleAnalysis.textPosition, width, height, textWidth);
 
-            // Text shadow/outline for better readability
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.lineWidth = 8;
-            ctx.lineJoin = 'round';
-            ctx.strokeText(userText, position.x, position.y);
+            // Calculate position based on analysis
+            const textX = getTextXPosition(styleAnalysis.horizontalAlign, width, textWidth);
+            const textY = getTextYPosition(styleAnalysis.verticalPosition, height, fontSize);
 
-            // Main text
+            // Draw stroke/outline if strokeColor exists
+            if (styleAnalysis.strokeColor) {
+                ctx.strokeStyle = styleAnalysis.strokeColor;
+                ctx.lineWidth = Math.max(fontSize * 0.08, 4); // Dynamic stroke width
+                ctx.lineJoin = 'round';
+                ctx.miterLimit = 2;
+                ctx.strokeText(userText, textX, textY);
+            }
+
+            // Draw outer glow for better visibility
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // Main text fill
             ctx.fillStyle = styleAnalysis.textColor;
-            ctx.fillText(userText, position.x, position.y);
+            ctx.fillText(userText, textX, textY);
+
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
 
             // Convert canvas to image
             const dataUrl = canvas.toDataURL('image/png');
@@ -252,7 +280,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             </div>
 
             <p className="text-white/60 mb-6">
-                원본 썸네일의 스타일을 참고하여 나만의 썸네일을 만들어보세요!
+                원본 썸네일의 스타일을 AI가 분석하여 나만의 썸네일을 만들어드립니다!
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -330,17 +358,38 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
 
                     {/* Style Info */}
                     <div className="p-4 bg-white/5 rounded-xl">
-                        <p className="text-sm text-white/60 mb-2">AI가 분석한 원본 스타일:</p>
-                        <div className="flex flex-wrap gap-2">
-                            <span className="px-2 py-1 bg-white/10 rounded text-xs text-white/80">
-                                색상: <span style={{ color: styleAnalysis.textColor }}>{styleAnalysis.textColor}</span>
-                            </span>
-                            <span className="px-2 py-1 bg-white/10 rounded text-xs text-white/80">
-                                위치: {styleAnalysis.textPosition}
-                            </span>
-                            <span className="px-2 py-1 bg-white/10 rounded text-xs text-white/80">
-                                스타일: {styleAnalysis.fontStyle}
-                            </span>
+                        <div className="flex items-center gap-2 mb-3">
+                            <p className="text-sm text-white/60">AI가 분석한 원본 스타일:</p>
+                            {isAnalyzing && (
+                                <svg className="animate-spin w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
+                                <div
+                                    className="w-5 h-5 rounded border border-white/30"
+                                    style={{ backgroundColor: styleAnalysis.textColor }}
+                                />
+                                <span className="text-xs text-white/80">텍스트 색상</span>
+                            </div>
+                            {styleAnalysis.strokeColor && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
+                                    <div
+                                        className="w-5 h-5 rounded border border-white/30"
+                                        style={{ backgroundColor: styleAnalysis.strokeColor }}
+                                    />
+                                    <span className="text-xs text-white/80">외곽선 색상</span>
+                                </div>
+                            )}
+                            <div className="px-3 py-2 bg-white/10 rounded-lg">
+                                <span className="text-xs text-white/80">크기: {Math.round(styleAnalysis.fontSizeRatio * 100)}%</span>
+                            </div>
+                            <div className="px-3 py-2 bg-white/10 rounded-lg">
+                                <span className="text-xs text-white/80">위치: {styleAnalysis.verticalPosition}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -370,11 +419,11 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 </div>
 
                 {/* Right: Preview Section */}
-                <div>
+                <div className="flex flex-col">
                     <label className="block text-sm font-medium text-white/80 mb-2">
                         미리보기
                     </label>
-                    <div className="aspect-video bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
+                    <div className="flex-1 aspect-video bg-black/30 rounded-xl overflow-hidden flex items-center justify-center min-h-[200px]">
                         {generatedImage ? (
                             <img
                                 src={generatedImage}
@@ -382,7 +431,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                 className="w-full h-full object-contain"
                             />
                         ) : (
-                            <div className="text-center text-white/40">
+                            <div className="text-center text-white/40 p-6">
                                 <svg className="w-16 h-16 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
                                     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                                     <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />

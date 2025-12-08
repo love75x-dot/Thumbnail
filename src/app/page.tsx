@@ -124,7 +124,7 @@ export default function Home() {
         <div className="gradient-orb orb-3"></div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-5 py-10 relative z-10">
+      <div className="w-full max-w-6xl mx-auto px-6 md:px-8 py-12 md:py-16 relative z-10">
         {/* Header */}
         <header className="text-center mb-12 animate-fadeInDown">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -209,13 +209,13 @@ export default function Home() {
                 추출된 썸네일
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                 {(Object.keys(thumbnailQualities) as QualityKey[]).map((quality) => (
-                  <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden">
+                  <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden flex flex-col">
                     <div className={`absolute top-7 right-7 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 ${thumbnailQualities[quality].badgeClass}`}>
                       {thumbnailQualities[quality].label}
                     </div>
-                    <div className="relative rounded-xl overflow-hidden mb-4">
+                    <div className="relative rounded-xl overflow-hidden mb-4 flex-shrink-0">
                       <img
                         src={getThumbnailUrl(videoId, quality)}
                         alt={`${thumbnailQualities[quality].label} 썸네일`}
@@ -230,28 +230,30 @@ export default function Home() {
                         <span className="text-sm text-white font-medium">{thumbnailQualities[quality].resolution}</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => downloadThumbnail(quality)}
-                      disabled={downloadingQuality === quality}
-                      className="btn-download flex items-center justify-center gap-2 w-full py-3 px-6 bg-white/10 border border-white/20 rounded-xl text-white font-medium"
-                    >
-                      {downloadingQuality === quality ? (
-                        <>
-                          <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          다운로드 중...
-                        </>
-                      ) : (
-                        <>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          다운로드
-                        </>
-                      )}
-                    </button>
+                    <div className="mt-auto">
+                      <button
+                        onClick={() => downloadThumbnail(quality)}
+                        disabled={downloadingQuality === quality}
+                        className="btn-download flex items-center justify-center gap-2 w-full py-3 px-6 bg-white/10 border border-white/20 rounded-xl text-white font-medium"
+                      >
+                        {downloadingQuality === quality ? (
+                          <>
+                            <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            다운로드 중...
+                          </>
+                        ) : (
+                          <>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            다운로드
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
