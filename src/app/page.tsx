@@ -124,7 +124,7 @@ export default function Home() {
         <div className="gradient-orb orb-3"></div>
       </div>
 
-      <div className="w-full max-w-5xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 py-10 md:py-16 lg:py-20 relative z-10">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 md:py-14 relative z-10">
         {/* Header */}
         <header className="text-center mb-16 animate-fadeInDown">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -209,7 +209,7 @@ export default function Home() {
                 추출된 썸네일
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                 {(Object.keys(thumbnailQualities) as QualityKey[]).map((quality) => (
                   <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden flex flex-col">
                     <div className={`absolute top-7 right-7 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 ${thumbnailQualities[quality].badgeClass}`}>

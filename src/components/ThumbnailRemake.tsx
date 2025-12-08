@@ -10,19 +10,17 @@ interface ThumbnailRemakeProps {
 interface StyleAnalysis {
     textColor: string;
     strokeColor: string | null;
-    fontSizeRatio: number;
-    fontWeight: string;
-    verticalPosition: string;
-    horizontalAlign: string;
+    fontPosition: string;
+    fontSizeLevel: string;
+    alignment: string;
 }
 
 const defaultStyle: StyleAnalysis = {
     textColor: '#FFFFFF',
     strokeColor: '#000000',
-    fontSizeRatio: 0.12,
-    fontWeight: 'bold',
-    verticalPosition: 'bottom',
-    horizontalAlign: 'center',
+    fontPosition: 'bottom',
+    fontSizeLevel: 'big',
+    alignment: 'center',
 };
 
 export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRemakeProps) {
@@ -37,7 +35,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Analyze thumbnail style when component mounts or thumbnailUrl changes
+    // Analyze thumbnail style
     useEffect(() => {
         const analyzeStyle = async () => {
             setIsAnalyzing(true);
@@ -52,10 +50,9 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     setStyleAnalysis({
                         textColor: data.textColor || defaultStyle.textColor,
                         strokeColor: data.strokeColor,
-                        fontSizeRatio: data.fontSizeRatio || defaultStyle.fontSizeRatio,
-                        fontWeight: data.fontWeight || defaultStyle.fontWeight,
-                        verticalPosition: data.verticalPosition || defaultStyle.verticalPosition,
-                        horizontalAlign: data.horizontalAlign || defaultStyle.horizontalAlign,
+                        fontPosition: data.fontPosition || defaultStyle.fontPosition,
+                        fontSizeLevel: data.fontSizeLevel || defaultStyle.fontSizeLevel,
+                        alignment: data.alignment || defaultStyle.alignment,
                     });
                 }
             } catch (error) {
@@ -74,7 +71,6 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Create canvas to crop image to 16:9 ratio
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     if (!ctx) return;
@@ -88,29 +84,24 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     let sourceY = 0;
 
                     if (imgRatio > targetRatio) {
-                        // Image is wider than 16:9, crop width
                         sourceWidth = img.height * targetRatio;
                         sourceX = (img.width - sourceWidth) / 2;
                     } else if (imgRatio < targetRatio) {
-                        // Image is taller than 16:9, crop height
                         sourceHeight = img.width / targetRatio;
                         sourceY = (img.height - sourceHeight) / 2;
                     }
 
-                    // Set canvas to 16:9 ratio (max 1280x720)
                     const maxWidth = 1280;
                     const maxHeight = 720;
                     canvas.width = maxWidth;
                     canvas.height = maxHeight;
 
-                    // Draw cropped image
                     ctx.drawImage(
                         img,
                         sourceX, sourceY, sourceWidth, sourceHeight,
                         0, 0, maxWidth, maxHeight
                     );
 
-                    // Convert to data URL
                     setUserImage(canvas.toDataURL('image/png'));
                 };
                 img.src = event.target?.result as string;
@@ -129,7 +120,6 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Create canvas to crop image to 16:9 ratio
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     if (!ctx) return;
@@ -179,22 +169,36 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         setIsDragOver(false);
     }, []);
 
-    // Calculate text Y position based on verticalPosition
-    const getTextYPosition = (position: string, canvasHeight: number, fontSize: number) => {
-        const padding = 60;
-        switch (position) {
-            case 'top':
-                return padding + fontSize / 2;
-            case 'middle':
-                return canvasHeight / 2;
-            case 'bottom':
+    // Get font size based on level
+    const getFontSize = (level: string, canvasHeight: number): number => {
+        switch (level) {
+            case 'big':
+                return Math.round(canvasHeight * 0.15); // 15% of height
+            case 'medium':
+                return Math.round(canvasHeight * 0.10); // 10% of height
+            case 'small':
+                return Math.round(canvasHeight * 0.07); // 7% of height
             default:
-                return canvasHeight - padding - fontSize / 2;
+                return Math.round(canvasHeight * 0.12);
         }
     };
 
-    // Calculate text X position based on horizontalAlign
-    const getTextXPosition = (align: string, canvasWidth: number, textWidth: number) => {
+    // Get Y position based on fontPosition
+    const getYPosition = (position: string, canvasHeight: number, fontSize: number): number => {
+        switch (position) {
+            case 'top':
+                return canvasHeight * 0.20; // 20% from top
+            case 'middle':
+                return canvasHeight * 0.50; // 50% (center)
+            case 'bottom':
+                return canvasHeight * 0.80; // 80% from top
+            default:
+                return canvasHeight * 0.80;
+        }
+    };
+
+    // Get X position based on alignment
+    const getXPosition = (align: string, canvasWidth: number, textWidth: number): number => {
         const padding = 60;
         switch (align) {
             case 'left':
@@ -222,7 +226,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         canvas.height = height;
 
         try {
-            // Step 1: Draw blurred background from original thumbnail
+            // Step 1: Draw blurred background
             const bgImage = new Image();
             bgImage.crossOrigin = 'anonymous';
 
@@ -232,12 +236,11 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 bgImage.src = thumbnailUrl;
             });
 
-            // Draw background with blur effect
             ctx.filter = 'blur(25px) brightness(0.4) saturate(1.2)';
             ctx.drawImage(bgImage, -50, -50, width + 100, height + 100);
             ctx.filter = 'none';
 
-            // Add gradient overlay for depth
+            // Add gradient overlay
             const gradient = ctx.createLinearGradient(0, 0, 0, height);
             gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
             gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
@@ -245,7 +248,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
 
-            // Step 2: Draw user image if provided
+            // Step 2: Draw user image
             if (userImage) {
                 const userImg = new Image();
                 await new Promise<void>((resolve, reject) => {
@@ -254,7 +257,6 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     userImg.src = userImage;
                 });
 
-                // Calculate dimensions to fit user image
                 const maxHeight = height * 0.9;
                 const aspectRatio = userImg.width / userImg.height;
                 let imgHeight = maxHeight;
@@ -268,7 +270,6 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 const imgX = (width - imgWidth) / 2;
                 const imgY = height - imgHeight;
 
-                // Add shadow to user image
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
                 ctx.shadowBlur = 40;
                 ctx.shadowOffsetX = 0;
@@ -281,46 +282,39 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             }
 
             // Step 3: Draw text with analyzed style
-            // Calculate dynamic font size based on fontSizeRatio
-            const fontSize = Math.round(height * styleAnalysis.fontSizeRatio);
-            const fontWeight = styleAnalysis.fontWeight === 'bold' ? 'bold' :
-                styleAnalysis.fontWeight === 'normal' ? 'normal' :
-                    styleAnalysis.fontWeight; // Use the weight directly (e.g., '800')
-
-            ctx.font = `${fontWeight} ${fontSize}px 'Noto Sans KR', sans-serif`;
+            const fontSize = getFontSize(styleAnalysis.fontSizeLevel, height);
+            ctx.font = `bold ${fontSize}px 'Noto Sans KR', sans-serif`;
             ctx.textBaseline = 'middle';
 
             const textMetrics = ctx.measureText(userText);
             const textWidth = textMetrics.width;
 
-            // Calculate position based on analysis
-            const textX = getTextXPosition(styleAnalysis.horizontalAlign, width, textWidth);
-            const textY = getTextYPosition(styleAnalysis.verticalPosition, height, fontSize);
+            const textX = getXPosition(styleAnalysis.alignment, width, textWidth);
+            const textY = getYPosition(styleAnalysis.fontPosition, height, fontSize);
 
-            // Draw stroke/outline if strokeColor exists
+            // Draw stroke if exists
             if (styleAnalysis.strokeColor) {
                 ctx.strokeStyle = styleAnalysis.strokeColor;
-                ctx.lineWidth = Math.max(fontSize * 0.08, 4); // Dynamic stroke width
+                ctx.lineWidth = Math.max(fontSize * 0.1, 6);
                 ctx.lineJoin = 'round';
                 ctx.miterLimit = 2;
                 ctx.strokeText(userText, textX, textY);
             }
 
-            // Draw outer glow for better visibility
+            // Draw shadow for better visibility
             ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 10;
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 12;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
 
-            // Main text fill
+            // Draw main text
             ctx.fillStyle = styleAnalysis.textColor;
             ctx.fillText(userText, textX, textY);
 
-            // Reset shadow
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
 
-            // Convert canvas to image
+            // Convert to image
             const dataUrl = canvas.toDataURL('image/png');
             setGeneratedImage(dataUrl);
 
@@ -450,7 +444,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                     className="w-5 h-5 rounded border border-white/30"
                                     style={{ backgroundColor: styleAnalysis.textColor }}
                                 />
-                                <span className="text-xs text-white/80">텍스트 색상</span>
+                                <span className="text-xs text-white/80">텍스트</span>
                             </div>
                             {styleAnalysis.strokeColor && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
@@ -458,14 +452,17 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                         className="w-5 h-5 rounded border border-white/30"
                                         style={{ backgroundColor: styleAnalysis.strokeColor }}
                                     />
-                                    <span className="text-xs text-white/80">외곽선 색상</span>
+                                    <span className="text-xs text-white/80">외곽선</span>
                                 </div>
                             )}
                             <div className="px-3 py-2 bg-white/10 rounded-lg">
-                                <span className="text-xs text-white/80">크기: {Math.round(styleAnalysis.fontSizeRatio * 100)}%</span>
+                                <span className="text-xs text-white/80">크기: {styleAnalysis.fontSizeLevel}</span>
                             </div>
                             <div className="px-3 py-2 bg-white/10 rounded-lg">
-                                <span className="text-xs text-white/80">위치: {styleAnalysis.verticalPosition}</span>
+                                <span className="text-xs text-white/80">위치: {styleAnalysis.fontPosition}</span>
+                            </div>
+                            <div className="px-3 py-2 bg-white/10 rounded-lg col-span-2">
+                                <span className="text-xs text-white/80">정렬: {styleAnalysis.alignment}</span>
                             </div>
                         </div>
                     </div>
@@ -533,7 +530,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 </div>
             </div>
 
-            {/* Hidden Canvas for Generation */}
+            {/* Hidden Canvas */}
             <canvas ref={canvasRef} className="hidden" />
         </div>
     );
