@@ -124,7 +124,7 @@ export default function Home() {
         <div className="gradient-orb orb-3"></div>
       </div>
 
-      <div className="w-full max-w-6xl mx-auto px-6 md:px-8 py-12 md:py-16 relative z-10">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16 relative z-10">
         {/* Header */}
         <header className="text-center mb-12 animate-fadeInDown">
           <div className="flex items-center justify-center gap-4 mb-4">
