@@ -116,7 +116,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#0f0f23] to-black flex flex-col items-center py-12 relative">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#0f0f23] to-black flex flex-col items-center pt-24 pb-12 relative">
       {/* Background Animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="gradient-orb orb-1"></div>
@@ -124,8 +124,8 @@ export default function Home() {
         <div className="gradient-orb orb-3"></div>
       </div>
 
-      {/* Main Container - 중앙 정렬 */}
-      <div className="w-full max-w-5xl px-6 relative z-10">
+      {/* Main Container - Wide Layout */}
+      <div className="w-full max-w-[1600px] px-8 relative z-10">
         {/* Header */}
         <header className="text-center mb-16 animate-fadeInDown w-full">
           <div className="flex items-center justify-center gap-4 mb-4">

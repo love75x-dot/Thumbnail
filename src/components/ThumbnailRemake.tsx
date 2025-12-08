@@ -8,19 +8,21 @@ interface ThumbnailRemakeProps {
 }
 
 interface StyleAnalysis {
-    textColor: string;
-    strokeColor: string | null;
-    fontPosition: string;
-    fontSizeLevel: string;
+    x_percent: number;
+    y_percent: number;
     alignment: string;
+    font_size_percent: number;
+    text_color: string;
+    stroke_color: string | null;
 }
 
 const defaultStyle: StyleAnalysis = {
-    textColor: '#FFFFFF',
-    strokeColor: '#000000',
-    fontPosition: 'bottom',
-    fontSizeLevel: 'big',
+    x_percent: 50,
+    y_percent: 80,
     alignment: 'center',
+    font_size_percent: 12,
+    text_color: '#FFFFFF',
+    stroke_color: '#000000',
 };
 
 export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRemakeProps) {
@@ -48,11 +50,12 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 const data = await response.json();
                 if (data.success) {
                     setStyleAnalysis({
-                        textColor: data.textColor || defaultStyle.textColor,
-                        strokeColor: data.strokeColor,
-                        fontPosition: data.fontPosition || defaultStyle.fontPosition,
-                        fontSizeLevel: data.fontSizeLevel || defaultStyle.fontSizeLevel,
+                        x_percent: data.x_percent || defaultStyle.x_percent,
+                        y_percent: data.y_percent || defaultStyle.y_percent,
                         alignment: data.alignment || defaultStyle.alignment,
+                        font_size_percent: data.font_size_percent || defaultStyle.font_size_percent,
+                        text_color: data.text_color || defaultStyle.text_color,
+                        stroke_color: data.stroke_color,
                     });
                 }
             } catch (error) {
@@ -169,48 +172,6 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         setIsDragOver(false);
     }, []);
 
-    // Get font size based on level
-    const getFontSize = (level: string, canvasHeight: number): number => {
-        switch (level) {
-            case 'big':
-                return Math.round(canvasHeight * 0.15); // 15% of height
-            case 'medium':
-                return Math.round(canvasHeight * 0.10); // 10% of height
-            case 'small':
-                return Math.round(canvasHeight * 0.07); // 7% of height
-            default:
-                return Math.round(canvasHeight * 0.12);
-        }
-    };
-
-    // Get Y position based on fontPosition
-    const getYPosition = (position: string, canvasHeight: number, fontSize: number): number => {
-        switch (position) {
-            case 'top':
-                return canvasHeight * 0.20; // 20% from top
-            case 'middle':
-                return canvasHeight * 0.50; // 50% (center)
-            case 'bottom':
-                return canvasHeight * 0.80; // 80% from top
-            default:
-                return canvasHeight * 0.80;
-        }
-    };
-
-    // Get X position based on alignment
-    const getXPosition = (align: string, canvasWidth: number, textWidth: number): number => {
-        const padding = 60;
-        switch (align) {
-            case 'left':
-                return padding;
-            case 'right':
-                return canvasWidth - textWidth - padding;
-            case 'center':
-            default:
-                return (canvasWidth - textWidth) / 2;
-        }
-    };
-
     const generateThumbnail = async () => {
         if (!canvasRef.current) return;
 
@@ -281,24 +242,25 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                 ctx.shadowBlur = 0;
             }
 
-            // Step 3: Draw text with analyzed style
-            const fontSize = getFontSize(styleAnalysis.fontSizeLevel, height);
+            // Step 3: Draw text with COORDINATE-BASED positioning
+            const fontSize = Math.round(height * (styleAnalysis.font_size_percent / 100));
             ctx.font = `bold ${fontSize}px 'Noto Sans KR', sans-serif`;
+
+            // Set text alignment based on analysis
+            ctx.textAlign = styleAnalysis.alignment as CanvasTextAlign;
             ctx.textBaseline = 'middle';
 
-            const textMetrics = ctx.measureText(userText);
-            const textWidth = textMetrics.width;
-
-            const textX = getXPosition(styleAnalysis.alignment, width, textWidth);
-            const textY = getYPosition(styleAnalysis.fontPosition, height, fontSize);
+            // Calculate EXACT coordinates from percentages
+            const targetX = width * (styleAnalysis.x_percent / 100);
+            const targetY = height * (styleAnalysis.y_percent / 100);
 
             // Draw stroke if exists
-            if (styleAnalysis.strokeColor) {
-                ctx.strokeStyle = styleAnalysis.strokeColor;
+            if (styleAnalysis.stroke_color) {
+                ctx.strokeStyle = styleAnalysis.stroke_color;
                 ctx.lineWidth = Math.max(fontSize * 0.1, 6);
                 ctx.lineJoin = 'round';
                 ctx.miterLimit = 2;
-                ctx.strokeText(userText, textX, textY);
+                ctx.strokeText(userText, targetX, targetY);
             }
 
             // Draw shadow for better visibility
@@ -307,9 +269,9 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
             ctx.shadowOffsetX = 3;
             ctx.shadowOffsetY = 3;
 
-            // Draw main text
-            ctx.fillStyle = styleAnalysis.textColor;
-            ctx.fillText(userText, textX, textY);
+            // Draw main text at EXACT coordinates
+            ctx.fillStyle = styleAnalysis.text_color;
+            ctx.fillText(userText, targetX, targetY);
 
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
@@ -337,30 +299,31 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
     };
 
     return (
-        <div className="mt-12 glass-card p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-6">
+        <div className="mt-12 glass-card p-8 md:p-10 w-full">
+            <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold text-white">썸네일 카피</h3>
-                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">AI</span>
+                    <h3 className="text-2xl font-semibold text-white">썸네일 카피</h3>
+                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">AI 좌표 기반</span>
                 </div>
             </div>
 
-            <p className="text-white/60 mb-6">
-                원본 썸네일의 스타일을 AI가 분석하여 나만의 썸네일을 만들어드립니다! (이미지는 자동으로 16:9 비율로 조정됩니다)
+            <p className="text-white/60 mb-8">
+                원본 썸네일의 텍스트 위치를 정밀하게 분석하여 똑같은 좌표에 배치합니다! (이미지는 자동으로 16:9 비율로 조정됩니다)
             </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
-                {/* Left: Input Section */}
-                <div className="space-y-6">
+            {/* Grid Layout: 4 (Input) + 8 (Preview) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left: Input Section (30%) */}
+                <div className="lg:col-span-4 space-y-6">
                     {/* Image Upload */}
                     <div>
                         <label className="block text-sm font-medium text-white/80 mb-2">
-                            사진 업로드 (자동으로 16:9 비율로 조정됩니다)
+                            사진 업로드
                         </label>
                         <div
                             onClick={() => fileInputRef.current?.click()}
@@ -368,7 +331,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             className={`
-                border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
+                border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all
                 ${isDragOver
                                     ? 'border-purple-500 bg-purple-500/10'
                                     : 'border-white/20 hover:border-white/40 bg-white/5'
@@ -380,7 +343,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                     <img
                                         src={userImage}
                                         alt="업로드된 이미지"
-                                        className="max-h-40 mx-auto rounded-lg"
+                                        className="max-h-32 mx-auto rounded-lg"
                                     />
                                     <button
                                         onClick={(e) => {
@@ -396,11 +359,10 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                 </div>
                             ) : (
                                 <>
-                                    <svg className="w-12 h-12 mx-auto mb-3 text-white/40" viewBox="0 0 24 24" fill="none">
+                                    <svg className="w-10 h-10 mx-auto mb-2 text-white/40" viewBox="0 0 24 24" fill="none">
                                         <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                                     </svg>
-                                    <p className="text-white/60">클릭하거나 이미지를 드래그하세요</p>
-                                    <p className="text-white/40 text-sm mt-1">PNG, JPG 지원</p>
+                                    <p className="text-white/60 text-sm">클릭 또는 드래그</p>
                                 </>
                             )}
                         </div>
@@ -422,7 +384,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                             type="text"
                             value={userText}
                             onChange={(e) => setUserText(e.target.value)}
-                            placeholder="썸네일에 넣을 텍스트를 입력하세요"
+                            placeholder="텍스트 입력"
                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-purple-500 transition-colors"
                         />
                     </div>
@@ -430,7 +392,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     {/* Style Info */}
                     <div className="p-4 bg-white/5 rounded-xl">
                         <div className="flex items-center gap-2 mb-3">
-                            <p className="text-sm text-white/60">AI가 분석한 원본 스타일:</p>
+                            <p className="text-sm text-white/60">AI 분석 결과:</p>
                             {isAnalyzing && (
                                 <svg className="animate-spin w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -438,31 +400,19 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                 </svg>
                             )}
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
                             <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
                                 <div
-                                    className="w-5 h-5 rounded border border-white/30"
-                                    style={{ backgroundColor: styleAnalysis.textColor }}
+                                    className="w-4 h-4 rounded border border-white/30"
+                                    style={{ backgroundColor: styleAnalysis.text_color }}
                                 />
                                 <span className="text-xs text-white/80">텍스트</span>
                             </div>
-                            {styleAnalysis.strokeColor && (
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg">
-                                    <div
-                                        className="w-5 h-5 rounded border border-white/30"
-                                        style={{ backgroundColor: styleAnalysis.strokeColor }}
-                                    />
-                                    <span className="text-xs text-white/80">외곽선</span>
-                                </div>
-                            )}
                             <div className="px-3 py-2 bg-white/10 rounded-lg">
-                                <span className="text-xs text-white/80">크기: {styleAnalysis.fontSizeLevel}</span>
+                                <span className="text-xs text-white/80">위치: X {styleAnalysis.x_percent}%, Y {styleAnalysis.y_percent}%</span>
                             </div>
                             <div className="px-3 py-2 bg-white/10 rounded-lg">
-                                <span className="text-xs text-white/80">위치: {styleAnalysis.fontPosition}</span>
-                            </div>
-                            <div className="px-3 py-2 bg-white/10 rounded-lg col-span-2">
-                                <span className="text-xs text-white/80">정렬: {styleAnalysis.alignment}</span>
+                                <span className="text-xs text-white/80">크기: {styleAnalysis.font_size_percent}%</span>
                             </div>
                         </div>
                     </div>
@@ -486,18 +436,18 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                썸네일 생성하기
+                                생성하기
                             </>
                         )}
                     </button>
                 </div>
 
-                {/* Right: Preview Section */}
-                <div className="flex flex-col">
+                {/* Right: Preview Section (70%) */}
+                <div className="lg:col-span-8 flex flex-col">
                     <label className="block text-sm font-medium text-white/80 mb-2">
-                        미리보기
+                        미리보기 (1280 x 720)
                     </label>
-                    <div className="flex-1 aspect-video bg-black/30 rounded-xl overflow-hidden flex items-center justify-center min-h-[200px]">
+                    <div className="flex-1 aspect-video bg-black/30 rounded-xl overflow-hidden flex items-center justify-center border border-white/10">
                         {generatedImage ? (
                             <img
                                 src={generatedImage}
@@ -505,13 +455,14 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                                 className="w-full h-full object-contain"
                             />
                         ) : (
-                            <div className="text-center text-white/40 p-6">
-                                <svg className="w-16 h-16 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
+                            <div className="text-center text-white/40 p-8">
+                                <svg className="w-20 h-20 mx-auto mb-4" viewBox="0 0 24 24" fill="none">
                                     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                                     <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
                                     <path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                <p>사진을 업로드하고<br />생성 버튼을 눌러주세요</p>
+                                <p className="text-lg">사진을 업로드하고 생성 버튼을 눌러주세요</p>
+                                <p className="text-sm text-white/30 mt-2">원본과 동일한 좌표에 텍스트가 배치됩니다</p>
                             </div>
                         )}
                     </div>

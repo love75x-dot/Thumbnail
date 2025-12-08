@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface AnalysisResult {
-    textColor: string;
-    strokeColor: string | null;
-    fontPosition: string;
-    fontSizeLevel: string;
+    x_percent: number;
+    y_percent: number;
     alignment: string;
+    font_size_percent: number;
+    text_color: string;
+    stroke_color: string | null;
 }
 
 const defaultAnalysis = {
     success: true,
-    textColor: '#FFFFFF',
-    strokeColor: '#000000',
-    fontPosition: 'bottom',
-    fontSizeLevel: 'big',
+    x_percent: 50,
+    y_percent: 80,
     alignment: 'center',
+    font_size_percent: 12,
+    text_color: '#FFFFFF',
+    stroke_color: '#000000',
 };
 
 export async function POST(request: NextRequest) {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
         const base64Image = Buffer.from(imageBuffer).toString('base64');
         const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
 
-        // Enhanced Gemini API prompt for better style analysis
+        // Coordinate-based precise analysis
         const geminiResponse = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
             {
@@ -59,24 +61,26 @@ export async function POST(request: NextRequest) {
                                     },
                                 },
                                 {
-                                    text: `이 유튜브 썸네일에서 가장 큰 제목 텍스트의 스타일을 정확하게 분석해주세요.
+                                    text: `이 유튜브 썸네일의 **가장 큰 메인 텍스트(제목)**의 중심점 위치와 스타일을 정밀하게 분석해주세요.
 
 반드시 아래 JSON 형식만 반환하세요. 다른 설명은 절대 포함하지 마세요.
 
 {
-  "textColor": "텍스트의 메인 색상 (Hex code, 예: #FFFFFF, #FF0000)",
-  "strokeColor": "텍스트 외곽선/테두리 색상 (Hex code). 외곽선이 없으면 null",
-  "fontPosition": "텍스트의 세로 위치 (top, middle, bottom 중 하나만)",
-  "fontSizeLevel": "텍스트 크기 (big, medium, small 중 하나만)",
-  "alignment": "텍스트 가로 정렬 (left, center, right 중 하나만)"
+  "x_percent": 이미지 너비 기준 텍스트 중심점의 가로 위치 (0~100, 왼쪽 끝 0, 오른쪽 끝 100),
+  "y_percent": 이미지 높이 기준 텍스트 중심점의 세로 위치 (0~100, 상단 0, 하단 100),
+  "alignment": 텍스트 정렬 방식 ("left", "center", "right" 중 하나만),
+  "font_size_percent": 이미지 높이 대비 글자 크기 비율 (5~30 사이 숫자),
+  "text_color": 텍스트의 메인 색상 (정확한 Hex code, 예: "#FFFFFF"),
+  "stroke_color": 텍스트 외곽선 색상 (Hex code, 없으면 null)
 }
 
 분석 가이드:
-- textColor: 텍스트의 가장 눈에 띄는 주요 색상을 정확한 Hex code로
-- strokeColor: 텍스트에 검은색이나 흰색 외곽선이 있다면 그 색상, 없으면 null
-- fontPosition: 텍스트가 이미지 상단 1/3에 있으면 top, 중간 1/3이면 middle, 하단 1/3이면 bottom
-- fontSizeLevel: 텍스트가 이미지 높이의 20% 이상이면 big, 10-20%면 medium, 10% 미만이면 small
-- alignment: 텍스트가 왼쪽에 치우쳐 있으면 left, 중앙이면 center, 오른쪽이면 right
+- x_percent: 텍스트 덩어리의 중심이 이미지 가로 어디에 있는지 (왼쪽 0%, 정중앙 50%, 오른쪽 100%)
+- y_percent: 텍스트 덩어리의 중심이 이미지 세로 어디에 있는지 (상단 0%, 중간 50%, 하단 100%)
+- alignment: 텍스트가 왼쪽 정렬이면 "left", 중앙이면 "center", 오른쪽이면 "right"
+- font_size_percent: 텍스트 높이가 이미지 전체 높이의 몇 %인지 (큰 제목 15-25%, 중간 10-15%, 작은 5-10%)
+- text_color: 텍스트의 주요 색상을 정확한 Hex code로
+- stroke_color: 텍스트에 검은색/흰색 테두리가 있다면 그 색상, 없으면 null
 
 JSON만 반환하세요.`,
                                 },
@@ -108,17 +112,20 @@ JSON만 반환하세요.`,
             // Validate and return
             return NextResponse.json({
                 success: true,
-                textColor: parsedResult.textColor || defaultAnalysis.textColor,
-                strokeColor: parsedResult.strokeColor,
-                fontPosition: ['top', 'middle', 'bottom'].includes(parsedResult.fontPosition)
-                    ? parsedResult.fontPosition
-                    : defaultAnalysis.fontPosition,
-                fontSizeLevel: ['big', 'medium', 'small'].includes(parsedResult.fontSizeLevel)
-                    ? parsedResult.fontSizeLevel
-                    : defaultAnalysis.fontSizeLevel,
+                x_percent: typeof parsedResult.x_percent === 'number'
+                    ? Math.min(Math.max(parsedResult.x_percent, 0), 100)
+                    : defaultAnalysis.x_percent,
+                y_percent: typeof parsedResult.y_percent === 'number'
+                    ? Math.min(Math.max(parsedResult.y_percent, 0), 100)
+                    : defaultAnalysis.y_percent,
                 alignment: ['left', 'center', 'right'].includes(parsedResult.alignment)
                     ? parsedResult.alignment
                     : defaultAnalysis.alignment,
+                font_size_percent: typeof parsedResult.font_size_percent === 'number'
+                    ? Math.min(Math.max(parsedResult.font_size_percent, 5), 30)
+                    : defaultAnalysis.font_size_percent,
+                text_color: parsedResult.text_color || defaultAnalysis.text_color,
+                stroke_color: parsedResult.stroke_color,
             });
         }
 
