@@ -215,11 +215,11 @@ export default function Home() {
                     <div className={`absolute top-7 right-7 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 ${thumbnailQualities[quality].badgeClass}`}>
                       {thumbnailQualities[quality].label}
                     </div>
-                    <div className="relative rounded-xl overflow-hidden mb-4 flex-shrink-0">
+                    <div className="relative rounded-xl overflow-hidden mb-4 flex-shrink-0 aspect-video bg-black/20">
                       <img
                         src={getThumbnailUrl(videoId, quality)}
                         alt={`${thumbnailQualities[quality].label} 썸네일`}
-                        className="w-full h-auto block transition-transform duration-300"
+                        className="w-full h-full object-cover block transition-transform duration-300"
                         onError={(e) => {
                           if (quality === 'maxres') {
                             (e.target as HTMLImageElement).src = getThumbnailUrl(videoId, 'hq');

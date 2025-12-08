@@ -72,7 +72,48 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                setUserImage(event.target?.result as string);
+                const img = new Image();
+                img.onload = () => {
+                    // Create canvas to crop image to 16:9 ratio
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+
+                    const targetRatio = 16 / 9;
+                    const imgRatio = img.width / img.height;
+
+                    let sourceWidth = img.width;
+                    let sourceHeight = img.height;
+                    let sourceX = 0;
+                    let sourceY = 0;
+
+                    if (imgRatio > targetRatio) {
+                        // Image is wider than 16:9, crop width
+                        sourceWidth = img.height * targetRatio;
+                        sourceX = (img.width - sourceWidth) / 2;
+                    } else if (imgRatio < targetRatio) {
+                        // Image is taller than 16:9, crop height
+                        sourceHeight = img.width / targetRatio;
+                        sourceY = (img.height - sourceHeight) / 2;
+                    }
+
+                    // Set canvas to 16:9 ratio (max 1280x720)
+                    const maxWidth = 1280;
+                    const maxHeight = 720;
+                    canvas.width = maxWidth;
+                    canvas.height = maxHeight;
+
+                    // Draw cropped image
+                    ctx.drawImage(
+                        img,
+                        sourceX, sourceY, sourceWidth, sourceHeight,
+                        0, 0, maxWidth, maxHeight
+                    );
+
+                    // Convert to data URL
+                    setUserImage(canvas.toDataURL('image/png'));
+                };
+                img.src = event.target?.result as string;
             };
             reader.readAsDataURL(file);
         }
@@ -86,7 +127,43 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                setUserImage(event.target?.result as string);
+                const img = new Image();
+                img.onload = () => {
+                    // Create canvas to crop image to 16:9 ratio
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+
+                    const targetRatio = 16 / 9;
+                    const imgRatio = img.width / img.height;
+
+                    let sourceWidth = img.width;
+                    let sourceHeight = img.height;
+                    let sourceX = 0;
+                    let sourceY = 0;
+
+                    if (imgRatio > targetRatio) {
+                        sourceWidth = img.height * targetRatio;
+                        sourceX = (img.width - sourceWidth) / 2;
+                    } else if (imgRatio < targetRatio) {
+                        sourceHeight = img.width / targetRatio;
+                        sourceY = (img.height - sourceHeight) / 2;
+                    }
+
+                    const maxWidth = 1280;
+                    const maxHeight = 720;
+                    canvas.width = maxWidth;
+                    canvas.height = maxHeight;
+
+                    ctx.drawImage(
+                        img,
+                        sourceX, sourceY, sourceWidth, sourceHeight,
+                        0, 0, maxWidth, maxHeight
+                    );
+
+                    setUserImage(canvas.toDataURL('image/png'));
+                };
+                img.src = event.target?.result as string;
             };
             reader.readAsDataURL(file);
         }
@@ -274,13 +351,13 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     </svg>
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold text-white">내 사진으로 리메이크하기</h3>
-                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">Beta</span>
+                    <h3 className="text-xl font-semibold text-white">썸네일 카피</h3>
+                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">AI</span>
                 </div>
             </div>
 
             <p className="text-white/60 mb-6">
-                원본 썸네일의 스타일을 AI가 분석하여 나만의 썸네일을 만들어드립니다!
+                원본 썸네일의 스타일을 AI가 분석하여 나만의 썸네일을 만들어드립니다! (이미지는 자동으로 16:9 비율로 조정됩니다)
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -289,7 +366,7 @@ export default function ThumbnailRemake({ videoId, thumbnailUrl }: ThumbnailRema
                     {/* Image Upload */}
                     <div>
                         <label className="block text-sm font-medium text-white/80 mb-2">
-                            사진 업로드 (배경 제거된 인물 사진 권장)
+                            사진 업로드 (자동으로 16:9 비율로 조정됩니다)
                         </label>
                         <div
                             onClick={() => fileInputRef.current?.click()}
