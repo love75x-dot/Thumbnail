@@ -115,38 +115,29 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Animation */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="gradient-orb orb-1"></div>
-        <div className="gradient-orb orb-2"></div>
-        <div className="gradient-orb orb-3"></div>
+    <div className="relative min-h-screen bg-white">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 bg-white">
       </div>
 
       <div className="max-w-6xl mx-auto px-5 py-10 relative z-10">
         {/* Header */}
         <header className="text-center mb-12 animate-fadeInDown">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="24" height="24" rx="6" fill="url(#gradient)" />
-              <path d="M9.5 8.5L16 12L9.5 15.5V8.5Z" fill="white" />
-              <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="24" y2="24">
-                  <stop stopColor="#FF0000" />
-                  <stop offset="1" stopColor="#FF6B6B" />
-                </linearGradient>
-              </defs>
+            <svg width="48" height="48" viewBox="0 0 159 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M154 17.5C154 17.5 152.5 7.75 148.5 3.75C143.5 -1.25 137.5 -1.25 134.5 -1.25C112.5 -2.75 79.5 -2.75 79.5 -2.75C79.5 -2.75 46.5 -2.75 24.5 -1.25C21.5 -1.25 15.5 -1.25 10.5 3.75C6.5 7.75 5 17.5 5 17.5C5 17.5 3.5 29.25 3.5 41V52.5C3.5 64.25 5 76 5 76C5 76 6.5 85.75 10.5 89.75C15.5 94.75 22.5 94.5 25.5 95.25C37.5 96.5 79.5 97 79.5 97C79.5 97 112.5 96.75 134.5 95.25C137.5 95 143.5 94.75 148.5 89.75C152.5 85.75 154 76 154 76C154 76 155.5 64.25 155.5 52.5V41C155.5 29.25 154 17.5 154 17.5Z" fill="#FF0000" />
+              <path d="M63.5 69.5L103.5 46.5L63.5 23.5V69.5Z" fill="white" />
             </svg>
-            <h1 className="text-3xl md:text-4xl font-bold gradient-text">유튜브 썸네일 추출기</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-black">유튜브 썸네일 추출기</h1>
           </div>
-          <p className="text-lg text-white/70 font-light">유튜브 영상의 고화질 썸네일을 무료로 다운로드하세요</p>
+          <p className="text-lg text-gray-600 font-light">유튜브 영상의 고화질 썸네일을 무료로 다운로드하세요</p>
         </header>
 
         {/* Input Section */}
         <main>
-          <div className="glass-card p-6 md:p-8 mb-8 animate-fadeInUp">
-            <div className="input-wrapper flex flex-col md:flex-row items-center gap-4 bg-black/30 rounded-3xl p-2 md:p-2 md:pl-5 border border-white/10 transition-all">
-              <svg className="hidden md:block text-white/50 flex-shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="glass-card p-6 md:p-8 mb-8 animate-fadeInUp bg-gray-50 border border-gray-200">
+            <div className="input-wrapper flex flex-col md:flex-row items-center gap-4 bg-gray-100 rounded-3xl p-2 md:p-2 md:pl-5 border-2 border-gray-300 transition-all">
+              <svg className="hidden md:block text-gray-600 flex-shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.1 1.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -158,12 +149,12 @@ export default function Home() {
                 onKeyDown={handleKeyPress}
                 onPaste={handlePaste}
                 placeholder="유튜브 영상 URL을 붙여넣으세요..."
-                className="flex-1 w-full bg-transparent border-none outline-none text-white text-center md:text-left placeholder:text-white/50 py-3 md:py-0"
+                className="flex-1 w-full bg-transparent border-none outline-none text-black text-center md:text-left placeholder:text-gray-500 py-3 md:py-0"
               />
               <button
                 onClick={extractThumbnails}
                 disabled={isLoading}
-                className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-3xl text-white font-semibold whitespace-nowrap w-full md:w-auto justify-center"
+                className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold whitespace-nowrap w-full md:w-auto justify-center shadow-md"
               >
                 {isLoading ? (
                   <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -180,7 +171,7 @@ export default function Home() {
                 )}
               </button>
             </div>
-            <p className="mt-4 text-sm text-white/50 text-center">
+            <p className="mt-4 text-sm text-gray-500 text-center">
               예: https://www.youtube.com/watch?v=xxxxx 또는 https://youtu.be/xxxxx
             </p>
           </div>
@@ -199,8 +190,8 @@ export default function Home() {
           {/* Result Section */}
           {videoId && (
             <div className="animate-fadeInUp">
-              <h2 className="flex items-center gap-3 text-2xl font-semibold mb-6 text-white">
-                <svg className="text-red-500" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <h2 className="flex items-center gap-3 text-2xl font-semibold mb-6 text-black">
+                <svg className="text-black" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                   <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
                   <path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -210,8 +201,8 @@ export default function Home() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {(Object.keys(thumbnailQualities) as QualityKey[]).map((quality) => (
-                  <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden">
-                    <div className={`absolute bottom-3 left-3 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 shadow-lg ${thumbnailQualities[quality].badgeClass}`}>
+                  <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden bg-white border border-gray-200 shadow-md rounded-lg">
+                    <div className={`absolute top-3 right-3 px-4 py-2 rounded text-xs font-bold text-white z-10 shadow-lg ${thumbnailQualities[quality].badgeClass}`}>
                       {thumbnailQualities[quality].label}
                     </div>
                     <div className="relative rounded-xl overflow-hidden mb-4">
@@ -232,7 +223,7 @@ export default function Home() {
                     <button
                       onClick={() => downloadThumbnail(quality)}
                       disabled={downloadingQuality === quality}
-                      className="btn-download flex items-center justify-center gap-2 w-full py-3 px-6 bg-white/10 border border-white/20 rounded-xl text-white font-medium"
+                      className="btn-download flex items-center justify-center gap-2 w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 border-none rounded-lg text-white font-semibold shadow-md transition-all"
                     >
                       {downloadingQuality === quality ? (
                         <>
@@ -259,7 +250,7 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="text-center mt-16 pt-8 border-t border-white/10 text-white/50 text-sm">
+        <footer className="text-center mt-16 pt-8 border-t border-gray-200 text-gray-500 text-sm">
           <p>© {new Date().getFullYear()} 유튜브 썸네일 추출기 | 간편하고 빠른 썸네일 다운로드</p>
         </footer>
       </div>
