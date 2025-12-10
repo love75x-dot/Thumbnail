@@ -115,7 +115,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#0f0f23] to-black flex flex-col items-center pt-24 pb-12 relative">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#0f0f23] to-black flex flex-col items-center pt-32 pb-12 relative">
       {/* Background Animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="gradient-orb orb-1"></div>
@@ -212,7 +212,7 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
                 {(Object.keys(thumbnailQualities) as QualityKey[]).map((quality) => (
                   <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden flex flex-col">
-                    <div className={`absolute top-7 right-7 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 ${thumbnailQualities[quality].badgeClass}`}>
+                    <div className={`absolute bottom-3 left-3 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 shadow-lg ${thumbnailQualities[quality].badgeClass}`}>
                       {thumbnailQualities[quality].label}
                     </div>
                     <div className="relative rounded-xl overflow-hidden mb-4 flex-shrink-0 aspect-video bg-black/20">

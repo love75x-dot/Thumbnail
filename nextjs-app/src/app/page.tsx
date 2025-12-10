@@ -211,7 +211,7 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {(Object.keys(thumbnailQualities) as QualityKey[]).map((quality) => (
                   <div key={quality} className="thumbnail-card glass-card p-5 relative overflow-hidden">
-                    <div className={`absolute top-7 right-7 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 ${thumbnailQualities[quality].badgeClass}`}>
+                    <div className={`absolute bottom-3 left-3 px-3 py-1.5 rounded-full text-xs font-semibold text-white z-10 shadow-lg ${thumbnailQualities[quality].badgeClass}`}>
                       {thumbnailQualities[quality].label}
                     </div>
                     <div className="relative rounded-xl overflow-hidden mb-4">
