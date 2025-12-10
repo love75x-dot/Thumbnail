@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import ThumbnailRemake from '@/components/ThumbnailRemake';
 
 // YouTube URL Patterns
 const youtubePatterns = [
@@ -255,9 +254,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-
-              {/* AI Thumbnail Remake Section */}
-              <ThumbnailRemake videoId={videoId} thumbnailUrl={getThumbnailUrl(videoId, 'maxres')} />
             </div>
           )}
         </main>
